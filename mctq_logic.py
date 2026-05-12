@@ -2,9 +2,8 @@
 
 from datetime import datetime
 
-
-VALID_GENDERS = ["male", "female"]
-VALID_YES_NO = ["yes", "no"]
+VALID_GENDERS = ["Male", "Female"]
+VALID_YES_NO = ["Yes", "No"]
 
 WORK_DAY_OPTIONS = [
     "1",
@@ -17,12 +16,10 @@ WORK_DAY_OPTIONS = [
     "I do not have a regular work schedule",
 ]
 
-
 DAY_TYPES = [
     ("Workdays", "w"),
     ("Free Days", "f"),
 ]
-
 
 TIME_QUESTIONS = [
     {"abbr": "BT", "label": "I go to bed at --:-- o'clock", "type": "time"},
@@ -31,7 +28,6 @@ TIME_QUESTIONS = [
     {"abbr": "SE", "label": "I wake up at --:-- o’clock", "type": "time"},
     {"abbr": "SI", "label": "After -- minutes, I get up", "type": "minutes"},
 ]
-
 
 MCTQ_COLUMNS = [
     "submitted_at",
@@ -52,7 +48,6 @@ MCTQ_COLUMNS = [
     "LEw",
     "LEf",
 ]
-
 
 SUSPICIOUS_TIME_FIELDS = {
     "BTw": "bedtime on workdays",
@@ -78,7 +73,15 @@ def clean_no_spaces(value):
 
 def normalize_choice(value):
     # Convert choice answers to lowercase
-    return clean_text(value).lower()
+    return clean_text(value)
+
+
+def build_full_name(first_name, last_name):
+    # Combine first and last name into one full name
+    first_name = clean_text(first_name)
+    last_name = clean_text(last_name)
+
+    return " ".join(part for part in [first_name, last_name] if part != "")
 
 
 def get_submission_metadata():
@@ -199,7 +202,7 @@ def get_minutes_validation_error(value, readable_name):
         seconds_label = "second" if minutes_part == 1 else "seconds"
 
         return f"""{readable_name}: 
-        
+
     Please enter the duration in minutes only. 
     If you meant {hours_part} {hours_label} and {minutes_part} {minutes_label}, write {converted_minutes}. 
     If you meant {hours_part} minutes and {minutes_part} {seconds_label}, write {decimal_minutes}."""
@@ -257,6 +260,8 @@ def convert_morning_time_to_night_format(value):
 def get_readable_field_name(key):
     # Convert internal column names into readable names for validation messages
     readable_names = {
+        "first_name": "First name",
+        "last_name": "Last name",
         "full_name": "Full name",
         "gender": "Gender",
         "WD": "Work schedule",
@@ -327,9 +332,13 @@ def validate_mctq_answers(answers_dict):
     # Return a list of readable validation errors
     errors = []
 
-    full_name = clean_text(answers_dict.get("full_name", ""))
-    if full_name == "":
-        errors.append("""Full name: This field is required.""")
+    first_name = clean_text(answers_dict.get("first_name", ""))
+    if first_name == "":
+        errors.append("""First name: This field is required.""")
+
+    last_name = clean_text(answers_dict.get("last_name", ""))
+    if last_name == "":
+        errors.append("""Last name: This field is required.""")
 
     gender = normalize_choice(answers_dict.get("gender", ""))
     if gender not in VALID_GENDERS:
@@ -376,7 +385,10 @@ def prepare_answers_for_saving(answers_dict):
 
     cleaned.update(get_submission_metadata())
 
-    cleaned["full_name"] = clean_text(answers_dict.get("full_name", ""))
+    cleaned["full_name"] = build_full_name(
+        answers_dict.get("first_name", ""),
+        answers_dict.get("last_name", ""),
+    )
     cleaned["gender"] = normalize_choice(answers_dict.get("gender", ""))
     cleaned["WD"] = clean_text(answers_dict.get("WD", ""))
 

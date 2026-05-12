@@ -48,7 +48,8 @@ with st.form("mctq_form"):
 
     st.subheader("General Information")
 
-    answers_dict["full_name"] = st.text_input("Full name")
+    answers_dict["first_name"] = st.text_input("First name")
+    answers_dict["last_name"] = st.text_input("Last name")
 
     answers_dict["gender"] = st.selectbox(
         "Gender",

@@ -1,6 +1,7 @@
 # mctq_logic.py
 
-from datetime import datetime
+from datetime import date, datetime, timezone
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 VALID_GENDERS = ["Male", "Female"]
 VALID_YES_NO = ["Yes", "No"]
@@ -16,6 +17,10 @@ WORK_DAY_OPTIONS = [
     "I do not have a regular work schedule",
 ]
 
+BIRTH_DAYS = [str(day) for day in range(1, 32)]
+BIRTH_MONTHS = [str(month) for month in range(1, 13)]
+BIRTH_YEARS = [str(year) for year in range(date.today().year - 5, date.today().year - 100, -1)]
+
 DAY_TYPES = [
     ("Workdays", "w"),
     ("Free Days", "f"),
@@ -30,9 +35,11 @@ TIME_QUESTIONS = [
 ]
 
 MCTQ_COLUMNS = [
-    "submitted_at",
     "full_name",
+    "email",
+    "date_of_birth",
     "gender",
+    "browser_timezone",
     "WD",
     "BTw",
     "SPrepw",
@@ -47,6 +54,37 @@ MCTQ_COLUMNS = [
     "Alarmf",
     "LEw",
     "LEf",
+    "submitted_at_utc",
+    "submitted_at_local",
+]
+
+COLUMN_HEADERS = {
+    "full_name": "Full Name",
+    "email": "Email",
+    "date_of_birth": "Date of Birth",
+    "gender": "Gender",
+    "browser_timezone": "Timezone",
+    "WD": "# Workdays",
+    "BTw": "Bedtime [w]",
+    "SPrepw": "Sleep Prep Time [w]",
+    "SLatw": "Sleep Latency [w]",
+    "SEw": "Sleep End [w]",
+    "SIw": "Sleep Inertia [w]",
+    "BTf": "Bedtime [f]",
+    "SPrepf": "Sleep Prep Time [f]",
+    "SLatf": "Sleep Latency [f]",
+    "SEf": "Sleep End [f]",
+    "SIf": "Sleep Inertia [f]",
+    "Alarmf": "Alarm Clock [f]",
+    "LEw": "Light Exposure [w]",
+    "LEf": "Light Exposure [f]",
+    "submitted_at_utc": "Submission Time - UTC",
+    "submitted_at_local": "Submission Time - Local",
+}
+
+READABLE_HEADERS = [
+    COLUMN_HEADERS[col]
+    for col in MCTQ_COLUMNS
 ]
 
 SUSPICIOUS_TIME_FIELDS = {
@@ -72,7 +110,7 @@ def clean_no_spaces(value):
 
 
 def normalize_choice(value):
-    # Convert choice answers to lowercase
+    # Clean choice answers
     return clean_text(value)
 
 
@@ -84,12 +122,31 @@ def build_full_name(first_name, last_name):
     return " ".join(part for part in [first_name, last_name] if part != "")
 
 
-def get_submission_metadata():
-    # Create submission timestamp
-    now = datetime.now()
+def get_submission_metadata(browser_timezone=None):
+    # Create UTC and local submission timestamps
+    submitted_at_utc_dt = datetime.now(timezone.utc)
+    submitted_at_utc = submitted_at_utc_dt.isoformat(timespec="seconds")
+
+    browser_timezone = clean_text(browser_timezone)
+
+    if browser_timezone:
+        try:
+            submitted_at_local = submitted_at_utc_dt.astimezone(
+                ZoneInfo(browser_timezone)
+            ).isoformat(timespec="seconds")
+
+        except ValueError:
+            submitted_at_local = ""
+
+        except ZoneInfoNotFoundError:
+            submitted_at_local = ""
+    else:
+        submitted_at_local = ""
 
     return {
-        "submitted_at": now.isoformat(timespec="seconds"),
+        "submitted_at_utc": submitted_at_utc,
+        "submitted_at_local": submitted_at_local,
+        "browser_timezone": browser_timezone,
     }
 
 
@@ -127,6 +184,61 @@ def is_valid_number(value):
         return float(value) >= 0
     except ValueError:
         return False
+
+
+def is_valid_email(value):
+    # Minimal email validation
+    value = clean_text(value)
+
+    return "@" in value and len(value) >= 3
+
+
+def build_date_of_birth(day, month, year):
+    # Build date of birth in YYYY-MM-DD format
+    day = clean_no_spaces(day)
+    month = clean_no_spaces(month)
+    year = clean_no_spaces(year)
+
+    if day == "" or month == "" or year == "":
+        return ""
+
+    try:
+        birth_date = date(int(year), int(month), int(day))
+        return birth_date.isoformat()
+    except ValueError:
+        return ""
+
+
+def calculate_age(birth_date, today=None):
+    # Calculate age in full years
+    if today is None:
+        today = date.today()
+
+    age = today.year - birth_date.year
+
+    if (today.month, today.day) < (birth_date.month, birth_date.day):
+        age -= 1
+
+    return age
+
+
+def is_valid_date_of_birth(day, month, year):
+    # Validate date of birth and age range
+    day = clean_no_spaces(day)
+    month = clean_no_spaces(month)
+    year = clean_no_spaces(year)
+
+    if day == "" or month == "" or year == "":
+        return False
+
+    try:
+        birth_date = date(int(year), int(month), int(day))
+    except ValueError:
+        return False
+
+    age = calculate_age(birth_date)
+
+    return 5 <= age <= 99
 
 
 def is_range_like(value):
@@ -263,6 +375,11 @@ def get_readable_field_name(key):
         "first_name": "First name",
         "last_name": "Last name",
         "full_name": "Full name",
+        "email": "Email",
+        "date_of_birth": "Date of birth",
+        "birth_day": "Birth day",
+        "birth_month": "Birth month",
+        "birth_year": "Birth year",
         "gender": "Gender",
         "WD": "Work schedule",
         "Alarmf": "I use an alarm clock on free days",
@@ -340,9 +457,20 @@ def validate_mctq_answers(answers_dict):
     if last_name == "":
         errors.append("""Last name: This field is required.""")
 
+    email = clean_text(answers_dict.get("email", ""))
+    if not is_valid_email(email):
+        errors.append("""Email: Please enter a valid email address.""")
+
+    if not is_valid_date_of_birth(
+        answers_dict.get("birth_day", ""),
+        answers_dict.get("birth_month", ""),
+        answers_dict.get("birth_year", ""),
+    ):
+        errors.append("""Date of birth: Please enter a valid date of birth for age 5-99.""")
+
     gender = normalize_choice(answers_dict.get("gender", ""))
     if gender not in VALID_GENDERS:
-        errors.append("""Gender: Gender must be either 'male' or 'female'.""")
+        errors.append("""Gender: Gender must be either 'Male' or 'Female'.""")
 
     wd = clean_text(answers_dict.get("WD", ""))
     if wd not in WORK_DAY_OPTIONS:
@@ -350,7 +478,7 @@ def validate_mctq_answers(answers_dict):
 
     alarmf = normalize_choice(answers_dict.get("Alarmf", ""))
     if alarmf not in VALID_YES_NO:
-        errors.append("""I use an alarm clock on free days: This field must be either 'yes' or 'no'.""")
+        errors.append("""I use an alarm clock on free days: This field must be either 'Yes' or 'No'.""")
 
     for day_label, suffix in DAY_TYPES:
         for question in TIME_QUESTIONS:
@@ -383,11 +511,17 @@ def prepare_answers_for_saving(answers_dict):
     # Clean and format answers before saving them to Google Sheets
     cleaned = {}
 
-    cleaned.update(get_submission_metadata())
+    cleaned.update(get_submission_metadata(answers_dict.get("browser_timezone", "")))
 
     cleaned["full_name"] = build_full_name(
         answers_dict.get("first_name", ""),
         answers_dict.get("last_name", ""),
+    )
+    cleaned["email"] = clean_text(answers_dict.get("email", ""))
+    cleaned["date_of_birth"] = build_date_of_birth(
+        answers_dict.get("birth_day", ""),
+        answers_dict.get("birth_month", ""),
+        answers_dict.get("birth_year", ""),
     )
     cleaned["gender"] = normalize_choice(answers_dict.get("gender", ""))
     cleaned["WD"] = clean_text(answers_dict.get("WD", ""))

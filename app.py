@@ -1,9 +1,13 @@
 # app.py
 
 import streamlit as st
+from streamlit_js_eval import streamlit_js_eval
 
 from google_sheets import append_row_to_sheet
 from mctq_logic import (
+    BIRTH_DAYS,
+    BIRTH_MONTHS,
+    BIRTH_YEARS,
     DAY_TYPES,
     TIME_QUESTIONS,
     VALID_GENDERS,
@@ -16,7 +20,7 @@ from mctq_logic import (
 
 
 st.set_page_config(
-    page_title="MCTQ Questionnaire",
+    page_title="Munich Chronotype Questionnaire (MCTQ)",
     page_icon="🕒",
     layout="centered",
 )
@@ -32,24 +36,149 @@ if "show_bottom_time_warning" not in st.session_state:
     st.session_state.show_bottom_time_warning = False
 
 
-st.title("MCTQ Questionnaire")
+browser_timezone = streamlit_js_eval(
+    js_expressions="Intl.DateTimeFormat().resolvedOptions().timeZone",
+    key="browser_timezone",
+)
+
+
+def get_question_image_path(question_abbr):
+    # Build image path according to the question abbreviation
+    return f"images/{question_abbr}.png"
+
+
+def show_question_note():
+    # Show note between bedtime and sleep preparation questions
+    note_text_col, note_image_col = st.columns([5, 1])
+
+    with note_text_col:
+        st.markdown(
+            "**Note that some people stay awake for some time when in bed!**"
+        )
+
+    with note_image_col:
+        st.image(
+            "images/Note.png",
+            width=65,
+        )
+
+
+def show_time_question(time_question, key_):
+    # Show one time/sleep question with its matching image
+    question_col, image_col = st.columns([5, 1])
+
+    with question_col:
+        if time_question["type"] == "time":
+            answer = st.text_input(
+                time_question["label"],
+                placeholder="--:--",
+                key=key_,
+            )
+
+        else:
+            answer = st.text_input(
+                time_question["label"],
+                placeholder="minutes",
+                key=key_,
+            )
+
+    with image_col:
+        st.image(
+            get_question_image_path(time_question["abbr"]),
+            width=65,
+        )
+
+    return answer
+
+
+def show_light_exposure_input(label, key_prefix):
+    # Show light exposure input using separate hour and minute dropdowns
+    st.write(label)
+
+    hour_col, hour_text_col, minute_col, minute_text_col = st.columns([2, 1, 2, 1])
+
+    with hour_col:
+        hours = st.selectbox(
+            "Hours",
+            options=[""] + [str(hour) for hour in range(0, 17)],
+            key=f"{key_prefix}_hours",
+            label_visibility="collapsed",
+        )
+
+    with hour_text_col:
+        st.markdown("hours")
+
+    with minute_col:
+        minutes = st.selectbox(
+            "Minutes",
+            options=[""] + [str(minute) for minute in range(0, 60)],
+            key=f"{key_prefix}_minutes",
+            label_visibility="collapsed",
+        )
+
+    with minute_text_col:
+        st.markdown("minutes")
+
+    if hours == "" or minutes == "":
+        return ""
+
+    return f"{int(hours):02d}:{int(minutes):02d}"
+
+
+st.title("Munich Chronotype Questionnaire (MCTQ)")
 
 st.write(
-    "This is an interactive version of the MCTQ questionnaire. "
-    "Please enter each answer according to the specified format. "
-    "If you need to revise an answer, you can do so before submitting."
+    "In this questionnaire, you report on your typical sleep behavior over the past 4 weeks. "
+    "We ask about work days and work-free days separately. "
+    "Please respond to the questions according to your perception of a standard week that includes "
+    "your usual work days and work-free days."
 )
 
 st.info("For time questions, please use a 24-hour HH:MM format, for example: 23:30.")
 
 
 with st.form("mctq_form"):
-    answers_dict = {}
+    answers_dict = {"browser_timezone": browser_timezone or ""}
 
-    st.subheader("General Information")
+    st.subheader("Personal Information")
 
-    answers_dict["first_name"] = st.text_input("First name")
-    answers_dict["last_name"] = st.text_input("Last name")
+    first_name_col, last_name_col = st.columns(2)
+
+    with first_name_col:
+        answers_dict["first_name"] = st.text_input(
+            "First name"
+        )
+
+    with last_name_col:
+        answers_dict["last_name"] = st.text_input(
+            "Last name"
+        )
+
+    answers_dict["email"] = st.text_input(
+        "Email"
+    )
+
+    st.write("Date of birth")
+
+    birth_day_col, birth_month_col, birth_year_col = st.columns(3)
+
+    with birth_day_col:
+        answers_dict["birth_day"] = st.selectbox(
+            "Day",
+            options=[""] + BIRTH_DAYS,
+        )
+
+    with birth_month_col:
+        answers_dict["birth_month"] = st.selectbox(
+            "Month",
+            options=[""] + BIRTH_MONTHS,
+        )
+
+    with birth_year_col:
+        answers_dict["birth_year"] = st.selectbox(
+            "Year",
+            options=[""] + BIRTH_YEARS,
+        )
 
     answers_dict["gender"] = st.selectbox(
         "Gender",
@@ -61,7 +190,7 @@ with st.form("mctq_form"):
         options=[""] + WORK_DAY_OPTIONS,
     )
 
-    st.subheader("Sleep Schedule")
+    st.subheader("MCTQ")
 
     time_confirmations = {}
 
@@ -71,19 +200,10 @@ with st.form("mctq_form"):
         for question in TIME_QUESTIONS:
             key = question["abbr"] + suffix
 
-            if question["type"] == "time":
-                answers_dict[key] = st.text_input(
-                    question["label"],
-                    placeholder="--:--",
-                    key=key,
-                )
+            answers_dict[key] = show_time_question(question, key)
 
-            else:
-                answers_dict[key] = st.text_input(
-                    question["label"],
-                    placeholder="minutes",
-                    key=key,
-                )
+            if question["abbr"] == "BT":
+                show_question_note()
 
         relevant_keys = [
             key for key in st.session_state.time_warning_data
@@ -110,18 +230,18 @@ with st.form("mctq_form"):
 
     st.subheader("Time Spent Outdoors")
 
-    st.write("On average, I spend the following amount of time outdoors in daylight:")
-
-    answers_dict["LEw"] = st.text_input(
-        "On workdays: --:-- hours",
-        placeholder="--:--",
-        key="LEw",
+    st.write(
+        "On average, I spend the following amount of time outdoors in daylight:"
     )
 
-    answers_dict["LEf"] = st.text_input(
-        "On free days: --:-- hours",
-        placeholder="--:--",
-        key="LEf",
+    answers_dict["LEw"] = show_light_exposure_input(
+        "On workdays:",
+        "LEw",
+    )
+
+    answers_dict["LEf"] = show_light_exposure_input(
+        "On free days:",
+        "LEf",
     )
 
     submitted = st.form_submit_button("Submit")

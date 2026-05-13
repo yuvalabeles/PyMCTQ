@@ -16,6 +16,7 @@ from mctq_logic import (
     validate_mctq_answers,
     get_suspicious_time_warnings,
     answers_dict_to_row,
+    DAYLIGHT_24H_COUNTRIES,
 )
 
 
@@ -35,6 +36,9 @@ if "time_warning_data" not in st.session_state:
 if "show_bottom_time_warning" not in st.session_state:
     st.session_state.show_bottom_time_warning = False
 
+if "submitted_successfully" not in st.session_state:
+    st.session_state.submitted_successfully = False
+
 
 browser_timezone = streamlit_js_eval(
     js_expressions="Intl.DateTimeFormat().resolvedOptions().timeZone",
@@ -49,44 +53,55 @@ def get_question_image_path(question_abbr):
 
 def show_question_note():
     # Show note between bedtime and sleep preparation questions
-    note_text_col, note_image_col = st.columns([5, 1])
+    image_col, note_text_col, empty_col = st.columns([1.5, 6, 1.5])
+
+    with image_col:
+        st.image(
+            "images/Note.png",
+            width=80,
+        )
 
     with note_text_col:
         st.markdown(
             "**Note that some people stay awake for some time when in bed!**"
         )
 
-    with note_image_col:
-        st.image(
-            "images/Note.png",
-            width=65,
-        )
+    with empty_col:
+        st.write("")
 
 
 def show_time_question(time_question, key_):
-    # Show one time/sleep question with its matching image
-    question_col, image_col = st.columns([5, 1])
-
-    with question_col:
-        if time_question["type"] == "time":
-            answer = st.text_input(
-                time_question["label"],
-                placeholder="--:--",
-                key=key_,
-            )
-
-        else:
-            answer = st.text_input(
-                time_question["label"],
-                placeholder="minutes",
-                key=key_,
-            )
+    # Show image, question, and answer field in one row
+    image_col, question_col, input_col = st.columns([1.5, 5.5, 2])
 
     with image_col:
         st.image(
             get_question_image_path(time_question["abbr"]),
-            width=65,
+            width=80,
         )
+
+    with question_col:
+        st.markdown(
+            f"<div style='padding-top: 8px'>{time_question['label']}</div>",
+            unsafe_allow_html=True,
+        )
+
+    with input_col:
+        if time_question["type"] == "time":
+            answer = st.text_input(
+                "Time input",
+                placeholder="HH:MM",
+                key=key_,
+                label_visibility="collapsed",
+            )
+
+        else:
+            answer = st.text_input(
+                "Minutes input",
+                placeholder="minutes",
+                key=key_,
+                label_visibility="collapsed",
+            )
 
     return answer
 
@@ -136,6 +151,12 @@ st.write(
 
 st.info("For time questions, please use a 24-hour HH:MM format, for example: 23:30.")
 
+if st.session_state.submitted_successfully:
+    st.success(
+        "Thank you! Your response was submitted successfully. "
+        "You may now close this page."
+    )
+    st.stop()
 
 with st.form("mctq_form"):
     answers_dict = {"browser_timezone": browser_timezone or ""}
@@ -244,6 +265,22 @@ with st.form("mctq_form"):
         "LEf",
     )
 
+    has_24h_daylight = st.checkbox(
+        "For the past month, I've been staying in a country with 24 hours of daylight."
+    )
+
+    if has_24h_daylight:
+        st.write("Country")
+
+        answers_dict["daylight_24h_country"] = st.selectbox(
+            "Country",
+            options=[""] + DAYLIGHT_24H_COUNTRIES,
+            label_visibility="collapsed",
+        )
+
+    else:
+        answers_dict["daylight_24h_country"] = "No"
+
     submitted = st.form_submit_button("Submit")
 
 
@@ -289,4 +326,5 @@ if submitted:
 
         append_row_to_sheet("responses", row)
 
-        st.success("Thank you! Your response was submitted successfully.")
+        st.session_state.submitted_successfully = True
+        st.rerun()

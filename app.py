@@ -16,7 +16,6 @@ from mctq_logic import (
     validate_mctq_answers,
     get_suspicious_time_warnings,
     answers_dict_to_row,
-    DAYLIGHT_24H_COUNTRIES,
 )
 
 
@@ -264,22 +263,6 @@ with st.form("mctq_form"):
         "On free days:",
         "LEf",
     )
-
-    has_24h_daylight = st.checkbox(
-        "For the past month, I've been staying in a country with 24 hours of daylight."
-    )
-
-    if has_24h_daylight:
-        st.write("Country")
-
-        answers_dict["daylight_24h_country"] = st.selectbox(
-            "Country",
-            options=[""] + DAYLIGHT_24H_COUNTRIES,
-            label_visibility="collapsed",
-        )
-
-    else:
-        answers_dict["daylight_24h_country"] = "No"
 
     submitted = st.form_submit_button("Submit")
 

@@ -21,17 +21,6 @@ BIRTH_DAYS = [str(day) for day in range(1, 32)]
 BIRTH_MONTHS = [str(month) for month in range(1, 13)]
 BIRTH_YEARS = [str(year) for year in range(date.today().year - 5, date.today().year - 100, -1)]
 
-DAYLIGHT_24H_COUNTRIES = [
-    "Canada",
-    "Finland",
-    "Greenland",
-    "Iceland",
-    "Norway",
-    "Russia",
-    "Sweden",
-    "United States (Alaska)",
-]
-
 DAY_TYPES = [
     ("Workdays", "w"),
     ("Free Days", "f"),
@@ -85,7 +74,6 @@ MCTQ_COLUMNS = [
     "Alarmf",
     "LEw",
     "LEf",
-    "daylight_24h_country",
     "submitted_at_utc",
     "submitted_at_local",
 ]
@@ -110,7 +98,6 @@ COLUMN_HEADERS = {
     "Alarmf": "Alarm Clock [f]",
     "LEw": "Light Exposure [w]",
     "LEf": "Light Exposure [f]",
-    "daylight_24h_country": "24h Daylight Country",
     "submitted_at_utc": "Submission Time - UTC",
     "submitted_at_local": "Submission Time - Local",
 }
@@ -418,7 +405,6 @@ def get_readable_field_name(key):
         "Alarmf": "I use an alarm clock on free days",
         "LEw": "Time spent outdoors in daylight on workdays",
         "LEf": "Time spent outdoors in daylight on free days",
-        "daylight_24h_country": "24h daylight country",
     }
 
     if key in readable_names:
@@ -536,18 +522,6 @@ def validate_mctq_answers(answers_dict):
         if not is_valid_hhmm(answers_dict.get(key, "")):
             errors.append(f"""{readable_name}: Please enter the time in HH:MM format.""")
 
-    daylight_country = clean_text(
-        answers_dict.get("daylight_24h_country", "")
-    )
-
-    if (
-            daylight_country != "No"
-            and daylight_country not in DAYLIGHT_24H_COUNTRIES
-    ):
-        errors.append(
-            """24h daylight country: Please select a valid country."""
-        )
-
     errors.extend(validate_sleep_preparation_order(answers_dict))
 
     return errors
@@ -585,9 +559,6 @@ def prepare_answers_for_saving(answers_dict):
     cleaned["Alarmf"] = normalize_choice(answers_dict.get("Alarmf", ""))
     cleaned["LEw"] = format_time_answer(answers_dict.get("LEw", ""))
     cleaned["LEf"] = format_time_answer(answers_dict.get("LEf", ""))
-    cleaned["daylight_24h_country"] = clean_text(
-        answers_dict.get("daylight_24h_country", "No")
-    )
 
     return cleaned
 

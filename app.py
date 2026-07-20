@@ -178,6 +178,11 @@ with st.form("mctq_form"):
         "Email"
     )
 
+    answers_dict["phone_number"] = st.text_input(
+        "Phone number (optional)",
+        # placeholder="050 123 4567",
+    )
+
     st.write("Date of birth")
 
     birth_day_col, birth_month_col, birth_year_col = st.columns(3)

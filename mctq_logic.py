@@ -57,6 +57,7 @@ TIME_QUESTIONS = [
 MCTQ_COLUMNS = [
     "full_name",
     "email",
+    "phone_number",
     "date_of_birth",
     "gender",
     "browser_timezone",
@@ -81,6 +82,7 @@ MCTQ_COLUMNS = [
 COLUMN_HEADERS = {
     "full_name": "Full Name",
     "email": "Email",
+    "phone_number": "Phone Number",
     "date_of_birth": "Date of Birth",
     "gender": "Gender",
     "browser_timezone": "Timezone",
@@ -538,6 +540,9 @@ def prepare_answers_for_saving(answers_dict):
         answers_dict.get("last_name", ""),
     )
     cleaned["email"] = clean_text(answers_dict.get("email", ""))
+    cleaned["phone_number"] = clean_text(
+        answers_dict.get("phone_number", "")
+    )
     cleaned["date_of_birth"] = build_date_of_birth(
         answers_dict.get("birth_day", ""),
         answers_dict.get("birth_month", ""),

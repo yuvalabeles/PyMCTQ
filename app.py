@@ -293,24 +293,24 @@ with st.form("mctq_form"):
 
     with first_name_col:
         answers_dict["first_name"] = st.text_input(
-            "First name:"
+            "**First name:**"
         )
 
     with last_name_col:
         answers_dict["last_name"] = st.text_input(
-            "Last name:"
+            "**Last name:**"
         )
 
     answers_dict["email"] = st.text_input(
-        "Email:"
+        "**Email:**"
     )
 
     answers_dict["phone_number"] = st.text_input(
-        "Phone number: (optional)",
+        "**Phone number:** (optional)",
     )
 
     st.markdown(
-        "<span style='font-size: 14px;'>Date of birth:</span>",
+        "<span style='font-size: 14px;'>**Date of birth:**</span>",
         unsafe_allow_html=True,
     )
 
@@ -343,7 +343,7 @@ with st.form("mctq_form"):
     )
 
     with q_col:
-        st.markdown("<span style='font-size: 14px;'>Gender:</span>",
+        st.markdown("<span style='font-size: 14px;'>**Gender:**</span>",
                     unsafe_allow_html=True,)
 
     with radio_col:
@@ -360,7 +360,7 @@ with st.form("mctq_form"):
     st.markdown("## MCTQ")
 
     answers_dict["WD"] = st.selectbox(
-        "How many work days per week do you have? (this includes being, for example, a stay-at-home parent)",
+        "**How many work days per week do you have?** (this includes being, for example, a stay-at-home parent)",
         options=[""] + WORK_DAY_OPTIONS,
     )
 

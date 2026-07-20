@@ -210,12 +210,17 @@ with st.form("mctq_form"):
         options=[""] + VALID_GENDERS,
     )
 
+    st.subheader("MCTQ")
+
     answers_dict["WD"] = st.selectbox(
-        "How many work days per week do you have?",
+        "How many work days per week do you have? (this includes being, for example, a housewife/househusband)",
         options=[""] + WORK_DAY_OPTIONS,
     )
 
-    st.subheader("MCTQ")
+    st.caption("Note: if your answer is '7' or 'I do not have a regular work schedule', "
+               "please consider if your sleep times may still differ between regular 'workdays' "
+               "and 'weekend days' and fill this MCTQ accordingly."
+               "\n\nIn that case, please also change the answer above to reflect that.")
 
     time_confirmations = {}
 

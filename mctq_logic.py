@@ -7,6 +7,7 @@ VALID_GENDERS = ["Male", "Female"]
 VALID_YES_NO = ["Yes", "No"]
 
 WORK_DAY_OPTIONS = [
+    "I do not have a regular work schedule",
     "1",
     "2",
     "3",
@@ -14,7 +15,6 @@ WORK_DAY_OPTIONS = [
     "5",
     "6",
     "7",
-    "I do not have a regular work schedule",
 ]
 
 BIRTH_DAYS = [str(day) for day in range(1, 32)]

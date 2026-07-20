@@ -105,6 +105,25 @@ def show_time_question(time_question, key_):
     return answer
 
 
+def show_yes_no_question(label, k):
+    question_col, answer_col = st.columns([5, 2])
+
+    with question_col:
+        st.markdown(f"{label}")
+
+    with answer_col:
+        answer = st.radio(
+            label,
+            options=VALID_YES_NO,
+            index=None,
+            horizontal=True,
+            key=k,
+            label_visibility="collapsed",
+        )
+
+    return answer
+
+
 def show_light_exposure_input(label, key_prefix):
     # Show light exposure input using separate hour and minute dropdowns
     st.write(label)
@@ -235,6 +254,50 @@ with st.form("mctq_form"):
             if question["abbr"] == "BT":
                 show_question_note()
 
+        if suffix == "w":
+            answers_dict["Alarmw"] = show_yes_no_question(
+                "I use an alarm clock on workdays:",
+                "Alarmw",
+            )
+
+            answers_dict["WakeBeforeAlarmw"] = show_yes_no_question(
+                "If 'Yes': I regularly wake up BEFORE the alarm rings:",
+                "WakeBeforeAlarmw",
+            )
+
+        if suffix == "f":
+            answers_dict["Alarmf"] = show_yes_no_question(
+                "My wake-up time is due to the use of an alarm clock:",
+                "Alarmf",
+            )
+
+            answers_dict["CannotChooseSleepTimesf"] = show_yes_no_question(
+                "There are specific reasons I use an alarm clock on work-free days:",
+                "CannotChooseSleepTimesf",
+            )
+
+            st.markdown("If 'Yes', please select all the reasons that apply:")
+
+            children_col, hobbies_col, other_col = st.columns(3)
+
+            with children_col:
+                answers_dict["ReasonChildrenPetsf"] = st.checkbox(
+                    "Child(ren)/pet(s)",
+                    key="ReasonChildrenPetsf",
+                )
+
+            with hobbies_col:
+                answers_dict["ReasonHobbiesf"] = st.checkbox(
+                    "Hobbies",
+                    key="ReasonHobbiesf",
+                )
+
+            with other_col:
+                answers_dict["ReasonOtherf"] = st.checkbox(
+                    "Other",
+                    key="ReasonOtherf",
+                )
+
         relevant_keys = [
             key for key in st.session_state.time_warning_data
             if key.endswith(suffix)
@@ -250,13 +313,6 @@ with st.form("mctq_form"):
                 f"If you meant morning, please check this box and submit again.",
                 key=f"confirm_{warning_key}",
             )
-
-    st.subheader("Alarm Clock")
-
-    answers_dict["Alarmf"] = st.selectbox(
-        "I use an alarm clock on free days",
-        options=[""] + VALID_YES_NO,
-    )
 
     st.subheader("Time Spent Outdoors")
 

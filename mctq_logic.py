@@ -67,12 +67,18 @@ MCTQ_COLUMNS = [
     "SLatw",
     "SEw",
     "SIw",
+    "Alarmw",
+    "WakeBeforeAlarmw",
     "BTf",
     "SPrepf",
     "SLatf",
     "SEf",
     "SIf",
     "Alarmf",
+    "CannotChooseSleepTimesf",
+    "ReasonChildrenPetsf",
+    "ReasonHobbiesf",
+    "ReasonOtherf",
     "LEw",
     "LEf",
     "submitted_at_utc",
@@ -92,12 +98,18 @@ COLUMN_HEADERS = {
     "SLatw": "Sleep Latency [w]",
     "SEw": "Sleep End [w]",
     "SIw": "Sleep Inertia [w]",
+    "Alarmw": "Alarm Clock [w]",
+    "WakeBeforeAlarmw": "Wake Before Alarm [w]",
     "BTf": "Bedtime [f]",
     "SPrepf": "Sleep Prep Time [f]",
     "SLatf": "Sleep Latency [f]",
     "SEf": "Sleep End [f]",
     "SIf": "Sleep Inertia [f]",
     "Alarmf": "Alarm Clock [f]",
+    "CannotChooseSleepTimesf": "Cannot Freely Choose Sleep Times [f]",
+    "ReasonChildrenPetsf": "Reason - Children/Pets [f]",
+    "ReasonHobbiesf": "Reason - Hobbies [f]",
+    "ReasonOtherf": "Reason - Other [f]",
     "LEw": "Light Exposure [w]",
     "LEf": "Light Exposure [f]",
     "submitted_at_utc": "Submission Time - UTC",
@@ -498,9 +510,49 @@ def validate_mctq_answers(answers_dict):
     if wd not in WORK_DAY_OPTIONS:
         errors.append("""Work schedule: Please select your work schedule.""")
 
+    alarmw = normalize_choice(answers_dict.get("Alarmw", ""))
+
+    if alarmw not in VALID_YES_NO:
+        errors.append(
+            "I use an alarm clock on workdays: Please select either 'Yes' or 'No'."
+        )
+
+    wake_before_alarmw = normalize_choice(
+        answers_dict.get("WakeBeforeAlarmw", "")
+    )
+
+    if alarmw == "Yes" and wake_before_alarmw not in VALID_YES_NO:
+        errors.append(
+            'If “Yes”: I regularly wake up BEFORE the alarm rings: '
+            "Please select either 'Yes' or 'No'."
+        )
+
     alarmf = normalize_choice(answers_dict.get("Alarmf", ""))
     if alarmf not in VALID_YES_NO:
         errors.append("""I use an alarm clock on free days: This field must be either 'Yes' or 'No'.""")
+
+    cannot_choose_sleep_times = normalize_choice(
+        answers_dict.get("CannotChooseSleepTimesf", "")
+    )
+
+    if cannot_choose_sleep_times not in VALID_YES_NO:
+        errors.append(
+            "Particular reasons affecting sleep times on free days: "
+            "Please select either 'Yes' or 'No'."
+        )
+
+    elif cannot_choose_sleep_times == "Yes":
+        selected_reasons = [
+            answers_dict.get("ReasonChildrenPetsf", False),
+            answers_dict.get("ReasonHobbiesf", False),
+            answers_dict.get("ReasonOtherf", False),
+        ]
+
+        if not any(selected_reasons):
+            errors.append(
+                "Reasons affecting sleep times on free days: "
+                "Please select at least one reason."
+            )
 
     for day_label, suffix in DAY_TYPES:
         for question in TIME_QUESTIONS:
@@ -561,7 +613,38 @@ def prepare_answers_for_saving(answers_dict):
             else:
                 cleaned[key] = clean_no_spaces(value)
 
+    cleaned["Alarmw"] = normalize_choice(
+        answers_dict.get("Alarmw", "")
+    )
+
+    if cleaned["Alarmw"] == "Yes":
+        cleaned["WakeBeforeAlarmw"] = normalize_choice(
+            answers_dict.get("WakeBeforeAlarmw", "")
+        )
+    else:
+        cleaned["WakeBeforeAlarmw"] = ""
+
     cleaned["Alarmf"] = normalize_choice(answers_dict.get("Alarmf", ""))
+
+    cleaned["CannotChooseSleepTimesf"] = normalize_choice(
+        answers_dict.get("CannotChooseSleepTimesf", "")
+    )
+
+    if cleaned["CannotChooseSleepTimesf"] == "Yes":
+        cleaned["ReasonChildrenPetsf"] = (
+            "Yes" if answers_dict.get("ReasonChildrenPetsf", False) else "No"
+        )
+        cleaned["ReasonHobbiesf"] = (
+            "Yes" if answers_dict.get("ReasonHobbiesf", False) else "No"
+        )
+        cleaned["ReasonOtherf"] = (
+            "Yes" if answers_dict.get("ReasonOtherf", False) else "No"
+        )
+    else:
+        cleaned["ReasonChildrenPetsf"] = ""
+        cleaned["ReasonHobbiesf"] = ""
+        cleaned["ReasonOtherf"] = ""
+
     cleaned["LEw"] = format_time_answer(answers_dict.get("LEw", ""))
     cleaned["LEf"] = format_time_answer(answers_dict.get("LEf", ""))
 

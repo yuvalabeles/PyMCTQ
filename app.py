@@ -230,7 +230,7 @@ if st.session_state.submitted_successfully:
 with st.form("mctq_form"):
     answers_dict = {"browser_timezone": browser_timezone or ""}
 
-    st.subheader("Personal Information")
+    st.markdown("### Personal Information")
 
     first_name_col, last_name_col = st.columns(2)
 
@@ -280,7 +280,8 @@ with st.form("mctq_form"):
         options=[""] + VALID_GENDERS,
     )
 
-    st.subheader("MCTQ")
+    st.divider()
+    st.markdown("## MCTQ")
 
     answers_dict["WD"] = st.selectbox(
         "How many work days per week do you have? (this includes being, for example, a stay-at-home parent)",
@@ -295,7 +296,9 @@ with st.form("mctq_form"):
     time_confirmations = {}
 
     for day_label, suffix in DAY_TYPES:
-        st.markdown(f"### {day_label}")
+        st.markdown(f"#### <u>{day_label}:</u>",
+                    unsafe_allow_html=True,
+                    )
 
         for question in TIME_QUESTIONS:
             key = question["abbr"] + suffix
@@ -370,7 +373,8 @@ with st.form("mctq_form"):
                 key=f"confirm_{warning_key}",
             )
 
-    st.subheader("Time Spent Outdoors")
+    st.divider()
+    st.markdown("### Time Spent Outdoors")
 
     st.write(
         "On average, I spend the following amount of time outdoors in daylight:"
@@ -386,7 +390,8 @@ with st.form("mctq_form"):
         "LEf",
     )
 
-    st.subheader("Work Details")
+    st.divider()
+    st.markdown("### Work Details")
 
     answers_dict["ShiftWork3M"] = show_yes_no_question(
         "In the last 3 months, I worked as a shift worker:",

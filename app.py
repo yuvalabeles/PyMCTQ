@@ -16,6 +16,8 @@ from mctq_logic import (
     COMMUTE_HOUR_OPTIONS,
     COMMUTE_MINUTE_OPTIONS,
     WORK_FLEXIBILITY_OPTIONS,
+    STIMULANT_ITEMS,
+    STIMULANT_PERIOD_OPTIONS,
     validate_mctq_answers,
     get_suspicious_time_warnings,
     answers_dict_to_row,
@@ -55,7 +57,7 @@ def get_question_image_path(question_abbr):
 
 def show_question_note():
     # Show note between bedtime and sleep preparation questions
-    image_col, note_text_col, empty_col = st.columns([1.5, 6.5, 1])
+    image_col, note_text_col, empty_col = st.columns([1.5, 7, 0.5])
 
     with image_col:
         st.image(
@@ -71,10 +73,12 @@ def show_question_note():
     with empty_col:
         st.write("")
 
+    divide(p=0.5)
+
 
 def show_time_question(time_question, key_, t="23:00"):
     # Show image, question, and answer field in one row
-    image_col, question_col, input_col = st.columns([1.5, 5.5, 2])
+    image_col, question_col, input_col = st.columns([1.5, 5, 2.8])
 
     with image_col:
         st.image(
@@ -105,10 +109,12 @@ def show_time_question(time_question, key_, t="23:00"):
                 label_visibility="collapsed",
             )
 
+    divide(p=0.5)
+
     return answer
 
 
-def show_yes_no_question(label, k):
+def show_yes_no_question(label, k, caption=None):
     question_col, answer_col = st.columns(
         [6, 2],
         vertical_alignment="center",
@@ -116,6 +122,9 @@ def show_yes_no_question(label, k):
 
     with question_col:
         st.markdown(f"**{label}**")
+
+    if caption is not None:
+        st.caption(caption)
 
     with answer_col:
         answer = st.radio(
@@ -127,38 +136,34 @@ def show_yes_no_question(label, k):
             label_visibility="collapsed",
         )
 
+    divide(p=0.5)
+
     return answer
 
 
 def show_light_exposure_input(label, key_prefix):
     # Show light exposure input using separate hour and minute dropdowns
-    st.write(label)
-
     (
-        hour_col, hour_text_col, minute_col, minute_text_col, empty_one, empty_two
-    ) = st.columns([1, 1.2, 1, 1, 1.5, 1.5])
+        label_col, hour_col, minute_col, minute_text_col
+    ) = st.columns([1.5, 1.4, 1.4, 3.5],
+                   vertical_alignment="center")
+
+    with label_col:
+        st.write(label)
 
     with hour_col:
         hours = st.selectbox(
             "Hours",
             options=[""] + [str(hour) for hour in range(0, 17)],
             key=f"{key_prefix}_hours",
-            label_visibility="collapsed",
         )
-
-    with hour_text_col:
-        st.markdown("hours,")
 
     with minute_col:
         minutes = st.selectbox(
             "Minutes",
             options=[""] + [str(minute) for minute in range(0, 60)],
             key=f"{key_prefix}_minutes",
-            label_visibility="collapsed",
         )
-
-    with minute_text_col:
-        st.markdown("minutes.")
 
     if hours == "" or minutes == "":
         return ""
@@ -168,45 +173,97 @@ def show_light_exposure_input(label, key_prefix):
 
 def show_commute_duration_input(label, key_prefix):
     # Show separate dropdowns for commute hours and minutes
-    st.write(label)
-
     (
+        label_col,
         hour_col,
-        hour_text_col,
         minute_col,
         minute_text_col,
-        first_empty_cols,
-        second_empty_cols,
     ) = st.columns(
-        [1, 1.2, 1, 1, 1.5, 1.5],
+        [4.5, 1.2, 1.4, 1.5],
         vertical_alignment="center",
     )
 
+    with label_col:
+        st.markdown(label, unsafe_allow_html=True)
+
     with hour_col:
         hours = st.selectbox(
-            f"{label} - hours",
+            f"Hours",
             options=[""] + COMMUTE_HOUR_OPTIONS,
             key=f"{key_prefix}_hours",
-            label_visibility="collapsed",
-            placeholder="[hr]",
         )
-
-    with hour_text_col:
-        st.markdown("hours,")
 
     with minute_col:
         minutes = st.selectbox(
-            f"{label} - minutes",
+            f"Minutes",
             options=[""] + COMMUTE_MINUTE_OPTIONS,
             key=f"{key_prefix}_minutes",
-            label_visibility="collapsed",
-            placeholder="[min]",
         )
 
-    with minute_text_col:
-        st.markdown("minutes.")
-
     return hours, minutes
+
+
+def show_stimulant_row(itm, medication=False):
+    st.markdown(
+        """
+        <style>
+        /* Text next to radio buttons */
+        div[data-testid="stRadio"] div[role="radiogroup"] label p {
+            font-size: 15px !important;
+        }
+
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+    # First row: statement, amount, and unit
+    if medication:
+        amount_col, unit_col = st.columns(
+            [3.6, 5],
+            vertical_alignment="center",
+        )
+    else:
+        amount_col, unit_col = st.columns(
+            [3.6, 7.2],
+            vertical_alignment="center",
+        )
+
+    with amount_col:
+        amount = st.selectbox(
+            itm["prefix"],
+            options=[""] + itm["amount_options"],
+            key=f"{itm['key']}Amount",
+            # label_visibility="collapsed",
+        )
+
+    with unit_col:
+        period = st.radio(
+            itm["unit"] + "\u00A0\u00A0per:",
+            options=STIMULANT_PERIOD_OPTIONS,
+            index=None,
+            horizontal=True,
+            key=f"{itm['key']}Period",
+            # label_visibility="collapsed",
+        )
+
+    st.markdown(
+        "<div style='height: 8px'></div>",
+        unsafe_allow_html=True,
+    )
+
+    return amount, period
+
+
+def divide(p=3.0):
+    st.markdown(
+        f"""
+        <div style="
+            border-top: {p}px solid rgba(128, 128, 128, 0.35);
+            margin: 14px 0 18px 0;
+        "></div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 st.title("Munich Chronotype Questionnaire (MCTQ)")
@@ -236,24 +293,26 @@ with st.form("mctq_form"):
 
     with first_name_col:
         answers_dict["first_name"] = st.text_input(
-            "First name"
+            "First name:"
         )
 
     with last_name_col:
         answers_dict["last_name"] = st.text_input(
-            "Last name"
+            "Last name:"
         )
 
     answers_dict["email"] = st.text_input(
-        "Email"
+        "Email:"
     )
 
     answers_dict["phone_number"] = st.text_input(
-        "Phone number (optional)",
-        # placeholder="050 123 4567",
+        "Phone number: (optional)",
     )
 
-    st.write("Date of birth")
+    st.markdown(
+        "<span style='font-size: 14px;'>Date of birth:</span>",
+        unsafe_allow_html=True,
+    )
 
     birth_day_col, birth_month_col, birth_year_col = st.columns(3)
 
@@ -261,26 +320,43 @@ with st.form("mctq_form"):
         answers_dict["birth_day"] = st.selectbox(
             "Day",
             options=[""] + BIRTH_DAYS,
+            placeholder="dd",
         )
 
     with birth_month_col:
         answers_dict["birth_month"] = st.selectbox(
             "Month",
             options=[""] + BIRTH_MONTHS,
+            placeholder="mm",
         )
 
     with birth_year_col:
         answers_dict["birth_year"] = st.selectbox(
             "Year",
             options=[""] + BIRTH_YEARS,
+            placeholder="yyyy",
         )
 
-    answers_dict["gender"] = st.selectbox(
-        "Gender",
-        options=[""] + VALID_GENDERS,
+    q_col, radio_col, empt_col = st.columns(
+        [1, 4, 4],
+        vertical_alignment="center",
     )
 
-    st.divider()
+    with q_col:
+        st.markdown("<span style='font-size: 14px;'>Gender:</span>",
+                    unsafe_allow_html=True,)
+
+    with radio_col:
+        answr = st.radio(
+            "Gender:",
+            options=VALID_GENDERS,
+            index=None,
+            horizontal=True,
+            label_visibility="collapsed",
+        )
+
+    divide()
+
     st.markdown("## MCTQ")
 
     answers_dict["WD"] = st.selectbox(
@@ -335,7 +411,7 @@ with st.form("mctq_form"):
                 "CannotChooseSleepTimesf",
             )
 
-            st.markdown("**If 'Yes'** - please select all the reasons that apply:")
+            st.markdown("**If 'Yes' - please select all the reasons that apply:**")
 
             children_col, hobbies_col, other_col = st.columns(3)
 
@@ -373,7 +449,7 @@ with st.form("mctq_form"):
                 key=f"confirm_{warning_key}",
             )
 
-    st.divider()
+    divide()
     st.markdown("### Time Spent Outdoors")
 
     st.write(
@@ -381,63 +457,55 @@ with st.form("mctq_form"):
     )
 
     answers_dict["LEw"] = show_light_exposure_input(
-        "**On workdays:**",
+        "**Workdays:**",
         "LEw",
     )
 
+    divide(p=0.5)
+
     answers_dict["LEf"] = show_light_exposure_input(
-        "**On free days:**",
+        "**Free days:**",
         "LEf",
     )
 
-    st.divider()
+    divide()
     st.markdown("### Work Details")
 
     answers_dict["ShiftWork3M"] = show_yes_no_question(
         "In the last 3 months, I worked as a shift worker:",
         "ShiftWork3M",
+        caption="(if 'Yes' - please skip 'Daily work schedule' section, "
+                "and continue with 'Work schedules flexibility' section)"
     )
 
-    st.caption(
-        "(if 'Yes' - please skip 'Daily work schedule' section, "
-        "and continue with 'Work schedules flexibility' section)"
-    )
-
-    st.markdown("**Daily work schedule:**")
+    st.markdown("**Daily work schedule:** (optional)")
 
     (
-        start_label_col,
         start_input_col,
-        end_label_col,
         end_input_col,
-        first_empty_col,
-        second_empty_col,
+        space_col
     ) = st.columns(
-        [1, 1.2, 1.2, 1.2, 1.2, 1.2],
+        [1.5, 1.5, 5],
         vertical_alignment="center",
     )
 
-    with start_label_col:
-        st.markdown("starts at:")
-
     with start_input_col:
         answers_dict["WorkStart"] = st.text_input(
-            "Usual work schedule start",
-            placeholder="HH:MM (use 24-hour scale, e.g. 08:00)",
+            "Starts at:",
+            placeholder="HH:MM",
             key="WorkStart",
-            label_visibility="collapsed",
+            # label_visibility="collapsed",
         )
-
-    with end_label_col:
-        st.markdown("and ends at:")
 
     with end_input_col:
         answers_dict["WorkEnd"] = st.text_input(
-            "Usual work schedule end",
-            placeholder="HH:MM (use 24-hour scale, e.g. 18:00)",
+            "Ends at:",
+            placeholder="HH:MM",
             key="WorkEnd",
-            label_visibility="collapsed",
+            # label_visibility="collapsed",
         )
+
+    divide(p=0.5)
 
     st.markdown("**Workdays schedule flexibility:**")
 
@@ -447,10 +515,11 @@ with st.form("mctq_form"):
         index=None,
         horizontal=False,
         key="WorkFlexibility",
-        # label_visibility="collapsed",
     )
 
-    st.markdown("**I travel to work:**")
+    divide(p=0.5)
+
+    st.markdown("**I commute to work:**")
     st.caption("(if needed, you can choose more than one)")
     answers_dict["CommuteEnclosed"] = st.checkbox(
         "Within an enclosed vehicle "
@@ -469,21 +538,55 @@ with st.form("mctq_form"):
         key="WorkFromHome",
     )
 
+    divide(p=0.5)
+
     (
         answers_dict["CommuteToHours"],
         answers_dict["CommuteToMinutePart"],
     ) = show_commute_duration_input(
-        "**For the commute to work, I need:**",
+        "**The commute <u>to</u> work takes me:**",
         "commute_to",
     )
+
+    divide(p=0.5)
 
     (
         answers_dict["CommuteFromHours"],
         answers_dict["CommuteFromMinutePart"],
     ) = show_commute_duration_input(
-        "**For the commute from work, I need:**",
+        "**The commute <u>from</u> work takes me:**",
         "commute_from",
     )
+
+    divide()
+    st.markdown("### Stimulants")
+
+    st.markdown(
+        "Please give <u>approximate/average amounts</u>:",
+        unsafe_allow_html=True,
+    )
+
+    for index, item in enumerate(STIMULANT_ITEMS):
+        if item['key'] == "SleepMedication":
+            sleep_med = True
+        else:
+            sleep_med = False
+        amount_key = f"{item['key']}Amount"
+        period_key = f"{item['key']}Period"
+
+        (
+            answers_dict[amount_key],
+            answers_dict[period_key],
+        ) = show_stimulant_row(item, medication=sleep_med)
+
+        # Add a short divider between items, but not after the last one
+        if index < len(STIMULANT_ITEMS) - 1:
+            left_space, divider_col, right_space = st.columns([0.2, 8, 0.2])
+
+            with divider_col:
+                divide(p=1)
+
+    divide()
 
     submitted = st.form_submit_button("Submit")
 

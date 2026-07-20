@@ -69,6 +69,111 @@ COMMUTE_MINUTE_OPTIONS = [
     str(minute) for minute in range(0, 60)
 ]
 
+STIMULANT_PERIOD_OPTIONS = [
+    "Day",
+    "Week",
+    "Month",
+]
+
+
+STIMULANT_ITEMS = [
+    {
+        "key": "Cigarettes",
+        "display_name": "Cigarettes",
+        "prefix": "I smoke",
+        "unit": "**cigarettes**",
+        "none_option": "I don't smoke",
+        "amount_options": (
+            ["I don't smoke"]
+            + [str(amount) for amount in range(1, 21)]
+            + ["More than 20"]
+        ),
+    },
+    {
+        "key": "Beer",
+        "display_name": "Beer",
+        "prefix": "I drink",
+        "unit": "bottles of **beer**",
+        "none_option": "I don't drink beer",
+        "amount_options": (
+            ["I don't drink beer"]
+            + [str(amount) for amount in range(1, 11)]
+            + ["More than 10"]
+        ),
+    },
+    {
+        "key": "Wine",
+        "display_name": "Wine",
+        "prefix": "I drink",
+        "unit": "glasses of **wine**",
+        "none_option": "I don't drink wine",
+        "amount_options": (
+            ["I don't drink wine"]
+            + [str(amount) for amount in range(1, 11)]
+            + ["More than 10"]
+        ),
+    },
+    {
+        "key": "Liquor",
+        "display_name": "Liquor",
+        "prefix": "I drink",
+        "unit": "glasses of **liquor** (not beer/wine)",
+        "none_option": "I don't drink liquor",
+        "amount_options": (
+            ["I don't drink liquor"]
+            + [str(amount) for amount in range(1, 11)]
+            + ["More than 10"]
+        ),
+    },
+    {
+        "key": "Coffee",
+        "display_name": "Coffee",
+        "prefix": "I drink",
+        "unit": "cups of **coffee**",
+        "none_option": "I don't drink coffee",
+        "amount_options": (
+            ["I don't drink coffee"]
+            + [str(amount) for amount in range(1, 11)]
+            + ["More than 10"]
+        ),
+    },
+    {
+        "key": "BlackTea",
+        "display_name": "Black tea",
+        "prefix": "I drink",
+        "unit": "cups of **black tea**",
+        "none_option": "I don't drink black tea",
+        "amount_options": (
+            ["I don't drink black tea"]
+            + [str(amount) for amount in range(1, 11)]
+            + ["More than 10"]
+        ),
+    },
+    {
+        "key": "CaffeinatedDrinks",
+        "display_name": "Caffeinated drinks",
+        "prefix": "I drink",
+        "unit": "cans of **caffeinated drinks**",
+        "none_option": "I don't drink caffeinated drinks",
+        "amount_options": (
+            ["I don't drink caffeinated drinks"]
+            + [str(amount) for amount in range(1, 11)]
+            + ["More than 10"]
+        ),
+    },
+    {
+        "key": "SleepMedication",
+        "display_name": "Sleep medication",
+        "prefix": "I take **sleep medication**",
+        "unit": "times",
+        "none_option": "I don't take sleep medication",
+        "amount_options": (
+            ["I don't take sleep medication"]
+            + [str(amount) for amount in range(1, 11)]
+        ),
+    },
+]
+
 MCTQ_COLUMNS = [
     # Personal Information
     "full_name",
@@ -77,8 +182,10 @@ MCTQ_COLUMNS = [
     "date_of_birth",
     "gender",
 
-    # Workdays
+    # MCTQ:
     "WD",
+
+    # Workdays
     "BTw",
     "SPrepw",
     "SLatw",
@@ -114,6 +221,24 @@ MCTQ_COLUMNS = [
     "CommuteToTotalMinutes",
     "CommuteFromTotalMinutes",
 
+    # Stimulants
+    "CigarettesAmount",
+    "CigarettesPeriod",
+    "BeerAmount",
+    "BeerPeriod",
+    "WineAmount",
+    "WinePeriod",
+    "LiquorAmount",
+    "LiquorPeriod",
+    "CoffeeAmount",
+    "CoffeePeriod",
+    "BlackTeaAmount",
+    "BlackTeaPeriod",
+    "CaffeinatedDrinksAmount",
+    "CaffeinatedDrinksPeriod",
+    "SleepMedicationAmount",
+    "SleepMedicationPeriod",
+
     # Submission Metadata
     "browser_timezone",
     "submitted_at_utc",
@@ -126,7 +251,9 @@ COLUMN_HEADERS = {
     "phone_number": "Phone Number",
     "date_of_birth": "Date of Birth",
     "gender": "Gender",
+
     "WD": "# Workdays",
+
     "BTw": "Bedtime [w]",
     "SPrepw": "Sleep Prep Time [w]",
     "SLatw": "Sleep Latency [w]",
@@ -134,6 +261,7 @@ COLUMN_HEADERS = {
     "SIw": "Sleep Inertia [w]",
     "Alarmw": "Alarm Clock [w]",
     "WakeBeforeAlarmw": "Wake Before Alarm [w]",
+
     "BTf": "Bedtime [f]",
     "SPrepf": "Sleep Prep Time [f]",
     "SLatf": "Sleep Latency [f]",
@@ -144,8 +272,10 @@ COLUMN_HEADERS = {
     "ReasonChildrenPetsf": "Reason - Children/Pets [f]",
     "ReasonHobbiesf": "Reason - Hobbies [f]",
     "ReasonOtherf": "Reason - Other [f]",
+
     "LEw": "Light Exposure [w]",
     "LEf": "Light Exposure [f]",
+
     "ShiftWork3M": "Shift Worker - Last 3 Months",
     "WorkStart": "Usual Work Start",
     "WorkEnd": "Usual Work End",
@@ -155,6 +285,24 @@ COLUMN_HEADERS = {
     "WorkFromHome": "Works at Home",
     "CommuteToTotalMinutes": "Commute to Work [minutes]",
     "CommuteFromTotalMinutes": "Commute from Work [minutes]",
+
+    "CigarettesAmount": "Cigarettes - Amount",
+    "CigarettesPeriod": "Cigarettes - Period",
+    "BeerAmount": "Beer - Amount",
+    "BeerPeriod": "Beer - Period",
+    "WineAmount": "Wine - Amount",
+    "WinePeriod": "Wine - Period",
+    "LiquorAmount": "Liquor - Amount",
+    "LiquorPeriod": "Liquor - Period",
+    "CoffeeAmount": "Coffee - Amount",
+    "CoffeePeriod": "Coffee - Period",
+    "BlackTeaAmount": "Black Tea - Amount",
+    "BlackTeaPeriod": "Black Tea - Period",
+    "CaffeinatedDrinksAmount": "Caffeinated Drinks - Amount",
+    "CaffeinatedDrinksPeriod": "Caffeinated Drinks - Period",
+
+    "SleepMedicationAmount": "Sleep Medication - Amount",
+    "SleepMedicationPeriod": "Sleep Medication - Period",
     "browser_timezone": "Timezone",
     "submitted_at_utc": "Submission Time - UTC",
     "submitted_at_local": "Submission Time - Local",
@@ -721,6 +869,33 @@ def validate_mctq_answers(answers_dict):
                 "Please select both hours and minutes."
             )
 
+    # Stimulants validation
+    for item in STIMULANT_ITEMS:
+        amount_key = f"{item['key']}Amount"
+        period_key = f"{item['key']}Period"
+
+        amount = normalize_choice(
+            answers_dict.get(amount_key, "")
+        )
+
+        if amount not in item["amount_options"]:
+            errors.append(
+                f"{item['display_name']}: "
+                "Please select an amount."
+            )
+            continue
+
+        if amount != item["none_option"]:
+            period = normalize_choice(
+                answers_dict.get(period_key, "")
+            )
+
+            if period not in STIMULANT_PERIOD_OPTIONS:
+                errors.append(
+                    f"{item['display_name']}: "
+                    "Please select Day, Week, or Month."
+                )
+
     return errors
 
 
@@ -852,6 +1027,24 @@ def prepare_answers_for_saving(answers_dict):
     else:
         cleaned["CommuteToTotalMinutes"] = ""
         cleaned["CommuteFromTotalMinutes"] = ""
+
+    # Stimulants
+    for item in STIMULANT_ITEMS:
+        amount_key = f"{item['key']}Amount"
+        period_key = f"{item['key']}Period"
+
+        amount = normalize_choice(
+            answers_dict.get(amount_key, "")
+        )
+
+        cleaned[amount_key] = amount
+
+        if amount == item["none_option"]:
+            cleaned[period_key] = ""
+        else:
+            cleaned[period_key] = normalize_choice(
+                answers_dict.get(period_key, "")
+            )
 
     return cleaned
 

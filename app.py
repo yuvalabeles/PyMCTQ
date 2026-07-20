@@ -13,6 +13,9 @@ from mctq_logic import (
     VALID_GENDERS,
     WORK_DAY_OPTIONS,
     VALID_YES_NO,
+    COMMUTE_HOUR_OPTIONS,
+    COMMUTE_MINUTE_OPTIONS,
+    WORK_FLEXIBILITY_OPTIONS,
     validate_mctq_answers,
     get_suspicious_time_warnings,
     answers_dict_to_row,
@@ -52,7 +55,7 @@ def get_question_image_path(question_abbr):
 
 def show_question_note():
     # Show note between bedtime and sleep preparation questions
-    image_col, note_text_col, empty_col = st.columns([1.5, 6, 1.5])
+    image_col, note_text_col, empty_col = st.columns([1.5, 6.5, 1])
 
     with image_col:
         st.image(
@@ -69,7 +72,7 @@ def show_question_note():
         st.write("")
 
 
-def show_time_question(time_question, key_):
+def show_time_question(time_question, key_, t="23:00"):
     # Show image, question, and answer field in one row
     image_col, question_col, input_col = st.columns([1.5, 5.5, 2])
 
@@ -89,7 +92,7 @@ def show_time_question(time_question, key_):
         if time_question["type"] == "time":
             answer = st.text_input(
                 "Time input",
-                placeholder="HH:MM",
+                placeholder=f"HH:MM (e.g. {t})",
                 key=key_,
                 label_visibility="collapsed",
             )
@@ -97,7 +100,7 @@ def show_time_question(time_question, key_):
         else:
             answer = st.text_input(
                 "Minutes input",
-                placeholder="minutes",
+                placeholder="minutes only (e.g. 10)",
                 key=key_,
                 label_visibility="collapsed",
             )
@@ -106,10 +109,13 @@ def show_time_question(time_question, key_):
 
 
 def show_yes_no_question(label, k):
-    question_col, answer_col = st.columns([5, 2])
+    question_col, answer_col = st.columns(
+        [6, 2],
+        vertical_alignment="center",
+    )
 
     with question_col:
-        st.markdown(f"{label}")
+        st.markdown(f"**{label}**")
 
     with answer_col:
         answer = st.radio(
@@ -128,7 +134,9 @@ def show_light_exposure_input(label, key_prefix):
     # Show light exposure input using separate hour and minute dropdowns
     st.write(label)
 
-    hour_col, hour_text_col, minute_col, minute_text_col = st.columns([2, 1, 2, 1])
+    (
+        hour_col, hour_text_col, minute_col, minute_text_col, empty_one, empty_two
+    ) = st.columns([1, 1.2, 1, 1, 1.5, 1.5])
 
     with hour_col:
         hours = st.selectbox(
@@ -139,7 +147,7 @@ def show_light_exposure_input(label, key_prefix):
         )
 
     with hour_text_col:
-        st.markdown("hours")
+        st.markdown("hours,")
 
     with minute_col:
         minutes = st.selectbox(
@@ -150,12 +158,55 @@ def show_light_exposure_input(label, key_prefix):
         )
 
     with minute_text_col:
-        st.markdown("minutes")
+        st.markdown("minutes.")
 
     if hours == "" or minutes == "":
         return ""
 
     return f"{int(hours):02d}:{int(minutes):02d}"
+
+
+def show_commute_duration_input(label, key_prefix):
+    # Show separate dropdowns for commute hours and minutes
+    st.write(label)
+
+    (
+        hour_col,
+        hour_text_col,
+        minute_col,
+        minute_text_col,
+        first_empty_cols,
+        second_empty_cols,
+    ) = st.columns(
+        [1, 1.2, 1, 1, 1.5, 1.5],
+        vertical_alignment="center",
+    )
+
+    with hour_col:
+        hours = st.selectbox(
+            f"{label} - hours",
+            options=[""] + COMMUTE_HOUR_OPTIONS,
+            key=f"{key_prefix}_hours",
+            label_visibility="collapsed",
+            placeholder="[hr]",
+        )
+
+    with hour_text_col:
+        st.markdown("hours,")
+
+    with minute_col:
+        minutes = st.selectbox(
+            f"{label} - minutes",
+            options=[""] + COMMUTE_MINUTE_OPTIONS,
+            key=f"{key_prefix}_minutes",
+            label_visibility="collapsed",
+            placeholder="[min]",
+        )
+
+    with minute_text_col:
+        st.markdown("minutes.")
+
+    return hours, minutes
 
 
 st.title("Munich Chronotype Questionnaire (MCTQ)")
@@ -232,7 +283,7 @@ with st.form("mctq_form"):
     st.subheader("MCTQ")
 
     answers_dict["WD"] = st.selectbox(
-        "How many work days per week do you have? (this includes being, for example, a housewife/househusband)",
+        "How many work days per week do you have? (this includes being, for example, a stay-at-home parent)",
         options=[""] + WORK_DAY_OPTIONS,
     )
 
@@ -249,7 +300,12 @@ with st.form("mctq_form"):
         for question in TIME_QUESTIONS:
             key = question["abbr"] + suffix
 
-            answers_dict[key] = show_time_question(question, key)
+            if question["abbr"] == "SE":
+                answers_dict[key] = show_time_question(question, key, t="08:00")
+            elif question["abbr"] == "SPrep":
+                answers_dict[key] = show_time_question(question, key, t="23:30")
+            else:
+                answers_dict[key] = show_time_question(question, key)
 
             if question["abbr"] == "BT":
                 show_question_note()
@@ -261,7 +317,7 @@ with st.form("mctq_form"):
             )
 
             answers_dict["WakeBeforeAlarmw"] = show_yes_no_question(
-                "If 'Yes': I regularly wake up BEFORE the alarm rings:",
+                "If 'Yes' - I regularly wake up BEFORE the alarm rings:",
                 "WakeBeforeAlarmw",
             )
 
@@ -276,7 +332,7 @@ with st.form("mctq_form"):
                 "CannotChooseSleepTimesf",
             )
 
-            st.markdown("If 'Yes', please select all the reasons that apply:")
+            st.markdown("**If 'Yes'** - please select all the reasons that apply:")
 
             children_col, hobbies_col, other_col = st.columns(3)
 
@@ -321,13 +377,107 @@ with st.form("mctq_form"):
     )
 
     answers_dict["LEw"] = show_light_exposure_input(
-        "On workdays:",
+        "**On workdays:**",
         "LEw",
     )
 
     answers_dict["LEf"] = show_light_exposure_input(
-        "On free days:",
+        "**On free days:**",
         "LEf",
+    )
+
+    st.subheader("Work Details")
+
+    answers_dict["ShiftWork3M"] = show_yes_no_question(
+        "In the last 3 months, I worked as a shift worker:",
+        "ShiftWork3M",
+    )
+
+    st.caption(
+        "(if 'Yes' - please skip 'Daily work schedule' section, "
+        "and continue with 'Work schedules flexibility' section)"
+    )
+
+    st.markdown("**Daily work schedule:**")
+
+    (
+        start_label_col,
+        start_input_col,
+        end_label_col,
+        end_input_col,
+        first_empty_col,
+        second_empty_col,
+    ) = st.columns(
+        [1, 1.2, 1.2, 1.2, 1.2, 1.2],
+        vertical_alignment="center",
+    )
+
+    with start_label_col:
+        st.markdown("starts at:")
+
+    with start_input_col:
+        answers_dict["WorkStart"] = st.text_input(
+            "Usual work schedule start",
+            placeholder="HH:MM (use 24-hour scale, e.g. 08:00)",
+            key="WorkStart",
+            label_visibility="collapsed",
+        )
+
+    with end_label_col:
+        st.markdown("and ends at:")
+
+    with end_input_col:
+        answers_dict["WorkEnd"] = st.text_input(
+            "Usual work schedule end",
+            placeholder="HH:MM (use 24-hour scale, e.g. 18:00)",
+            key="WorkEnd",
+            label_visibility="collapsed",
+        )
+
+    st.markdown("**Workdays schedule flexibility:**")
+
+    answers_dict["WorkFlexibility"] = st.radio(
+        "My work schedules are - ",
+        options=WORK_FLEXIBILITY_OPTIONS,
+        index=None,
+        horizontal=False,
+        key="WorkFlexibility",
+        # label_visibility="collapsed",
+    )
+
+    st.markdown("**I travel to work:**")
+    st.caption("(if needed, you can choose more than one)")
+    answers_dict["CommuteEnclosed"] = st.checkbox(
+        "Within an enclosed vehicle "
+        "(e.g. car, bus, underground).",
+        key="CommuteEnclosed",
+    )
+
+    answers_dict["CommuteNotEnclosed"] = st.checkbox(
+        "Not within an enclosed vehicle "
+        "(e.g. on foot, by bike).",
+        key="CommuteNotEnclosed",
+    )
+
+    answers_dict["WorkFromHome"] = st.checkbox(
+        "I work at home.",
+        key="WorkFromHome",
+    )
+
+    (
+        answers_dict["CommuteToHours"],
+        answers_dict["CommuteToMinutePart"],
+    ) = show_commute_duration_input(
+        "**For the commute to work, I need:**",
+        "commute_to",
+    )
+
+    (
+        answers_dict["CommuteFromHours"],
+        answers_dict["CommuteFromMinutePart"],
+    ) = show_commute_duration_input(
+        "**For the commute from work, I need:**",
+        "commute_from",
     )
 
     submitted = st.form_submit_button("Submit")

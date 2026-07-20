@@ -54,13 +54,30 @@ TIME_QUESTIONS = [
     },
 ]
 
+WORK_FLEXIBILITY_OPTIONS = [
+    "Very flexible",
+    "A little flexible",
+    "Rather inflexible",
+    "Very inflexible",
+]
+
+COMMUTE_HOUR_OPTIONS = [
+    str(hour) for hour in range(0, 3)
+]
+
+COMMUTE_MINUTE_OPTIONS = [
+    str(minute) for minute in range(0, 60)
+]
+
 MCTQ_COLUMNS = [
+    # Personal Information
     "full_name",
     "email",
     "phone_number",
     "date_of_birth",
     "gender",
-    "browser_timezone",
+
+    # Workdays
     "WD",
     "BTw",
     "SPrepw",
@@ -69,6 +86,8 @@ MCTQ_COLUMNS = [
     "SIw",
     "Alarmw",
     "WakeBeforeAlarmw",
+
+    # Free Days
     "BTf",
     "SPrepf",
     "SLatf",
@@ -79,8 +98,24 @@ MCTQ_COLUMNS = [
     "ReasonChildrenPetsf",
     "ReasonHobbiesf",
     "ReasonOtherf",
+
+    # Time Spent Outdoors
     "LEw",
     "LEf",
+
+    # Work Details
+    "ShiftWork3M",
+    "WorkStart",
+    "WorkEnd",
+    "WorkFlexibility",
+    "CommuteEnclosed",
+    "CommuteNotEnclosed",
+    "WorkFromHome",
+    "CommuteToTotalMinutes",
+    "CommuteFromTotalMinutes",
+
+    # Submission Metadata
+    "browser_timezone",
     "submitted_at_utc",
     "submitted_at_local",
 ]
@@ -91,7 +126,6 @@ COLUMN_HEADERS = {
     "phone_number": "Phone Number",
     "date_of_birth": "Date of Birth",
     "gender": "Gender",
-    "browser_timezone": "Timezone",
     "WD": "# Workdays",
     "BTw": "Bedtime [w]",
     "SPrepw": "Sleep Prep Time [w]",
@@ -112,6 +146,16 @@ COLUMN_HEADERS = {
     "ReasonOtherf": "Reason - Other [f]",
     "LEw": "Light Exposure [w]",
     "LEf": "Light Exposure [f]",
+    "ShiftWork3M": "Shift Worker - Last 3 Months",
+    "WorkStart": "Usual Work Start",
+    "WorkEnd": "Usual Work End",
+    "WorkFlexibility": "Work Schedule Flexibility",
+    "CommuteEnclosed": "Commute - Enclosed Vehicle",
+    "CommuteNotEnclosed": "Commute - Not Enclosed Vehicle",
+    "WorkFromHome": "Works at Home",
+    "CommuteToTotalMinutes": "Commute to Work [minutes]",
+    "CommuteFromTotalMinutes": "Commute from Work [minutes]",
+    "browser_timezone": "Timezone",
     "submitted_at_utc": "Submission Time - UTC",
     "submitted_at_local": "Submission Time - Local",
 }
@@ -479,6 +523,25 @@ def validate_sleep_preparation_order(answers_dict):
     return errors
 
 
+def are_valid_commute_duration_parts(hours, minutes):
+    # Validate the hour and minute values selected for a commute duration
+    hours = clean_text(hours)
+    minutes = clean_text(minutes)
+
+    return (
+        hours in COMMUTE_HOUR_OPTIONS
+        and minutes in COMMUTE_MINUTE_OPTIONS
+    )
+
+
+def commute_duration_to_total_minutes(hours, minutes):
+    # Convert separate commute hour/minute selections to total minutes
+    hours = clean_text(hours)
+    minutes = clean_text(minutes)
+
+    return int(hours) * 60 + int(minutes)
+
+
 def validate_mctq_answers(answers_dict):
     # Return a list of readable validation errors
     errors = []
@@ -523,7 +586,7 @@ def validate_mctq_answers(answers_dict):
 
     if alarmw == "Yes" and wake_before_alarmw not in VALID_YES_NO:
         errors.append(
-            'If “Yes”: I regularly wake up BEFORE the alarm rings: '
+            "If 'Yes', I regularly wake up BEFORE the alarm rings: "
             "Please select either 'Yes' or 'No'."
         )
 
@@ -577,6 +640,86 @@ def validate_mctq_answers(answers_dict):
             errors.append(f"""{readable_name}: Please enter the time in HH:MM format.""")
 
     errors.extend(validate_sleep_preparation_order(answers_dict))
+
+    # Work Details validation
+    shift_work = normalize_choice(
+        answers_dict.get("ShiftWork3M", "")
+    )
+
+    if shift_work not in VALID_YES_NO:
+        errors.append(
+            "Shift work during the last 3 months: "
+            "Please select either 'Yes' or 'No'."
+        )
+
+    elif shift_work == "No":
+        if not is_valid_hhmm(
+            answers_dict.get("WorkStart", "")
+        ):
+            errors.append(
+                "Usual work schedule start: "
+                "Please enter the time in HH:MM format."
+            )
+
+        if not is_valid_hhmm(
+            answers_dict.get("WorkEnd", "")
+        ):
+            errors.append(
+                "Usual work schedule end: "
+                "Please enter the time in HH:MM format."
+            )
+
+    work_flexibility = normalize_choice(
+        answers_dict.get("WorkFlexibility", "")
+    )
+
+    if work_flexibility not in WORK_FLEXIBILITY_OPTIONS:
+        errors.append(
+            "Work schedule flexibility: "
+            "Please select one option."
+        )
+
+    commute_enclosed = bool(
+        answers_dict.get("CommuteEnclosed", False)
+    )
+    commute_not_enclosed = bool(
+        answers_dict.get("CommuteNotEnclosed", False)
+    )
+    work_from_home = bool(
+        answers_dict.get("WorkFromHome", False)
+    )
+
+    if not any([
+        commute_enclosed,
+        commute_not_enclosed,
+        work_from_home,
+    ]):
+        errors.append(
+            "Travel to work: Please select at least one option."
+        )
+
+    has_physical_commute = (
+        commute_enclosed or commute_not_enclosed
+    )
+
+    if has_physical_commute:
+        if not are_valid_commute_duration_parts(
+            answers_dict.get("CommuteToHours", ""),
+            answers_dict.get("CommuteToMinutePart", ""),
+        ):
+            errors.append(
+                "Commute to work: "
+                "Please select both hours and minutes."
+            )
+
+        if not are_valid_commute_duration_parts(
+            answers_dict.get("CommuteFromHours", ""),
+            answers_dict.get("CommuteFromMinutePart", ""),
+        ):
+            errors.append(
+                "Commute from work: "
+                "Please select both hours and minutes."
+            )
 
     return errors
 
@@ -647,6 +790,68 @@ def prepare_answers_for_saving(answers_dict):
 
     cleaned["LEw"] = format_time_answer(answers_dict.get("LEw", ""))
     cleaned["LEf"] = format_time_answer(answers_dict.get("LEf", ""))
+
+    # Work Details
+    cleaned["ShiftWork3M"] = normalize_choice(
+        answers_dict.get("ShiftWork3M", "")
+    )
+
+    if cleaned["ShiftWork3M"] == "No":
+        cleaned["WorkStart"] = format_time_answer(
+            answers_dict.get("WorkStart", "")
+        )
+        cleaned["WorkEnd"] = format_time_answer(
+            answers_dict.get("WorkEnd", "")
+        )
+    else:
+        cleaned["WorkStart"] = ""
+        cleaned["WorkEnd"] = ""
+
+    cleaned["WorkFlexibility"] = normalize_choice(
+        answers_dict.get("WorkFlexibility", "")
+    )
+
+    cleaned["CommuteEnclosed"] = (
+        "Yes"
+        if answers_dict.get("CommuteEnclosed", False)
+        else "No"
+    )
+
+    cleaned["CommuteNotEnclosed"] = (
+        "Yes"
+        if answers_dict.get("CommuteNotEnclosed", False)
+        else "No"
+    )
+
+    cleaned["WorkFromHome"] = (
+        "Yes"
+        if answers_dict.get("WorkFromHome", False)
+        else "No"
+    )
+
+    has_physical_commute = (
+        answers_dict.get("CommuteEnclosed", False)
+        or answers_dict.get("CommuteNotEnclosed", False)
+    )
+
+    if has_physical_commute:
+        cleaned["CommuteToTotalMinutes"] = (
+            commute_duration_to_total_minutes(
+                answers_dict.get("CommuteToHours", ""),
+                answers_dict.get("CommuteToMinutePart", ""),
+            )
+        )
+
+        cleaned["CommuteFromTotalMinutes"] = (
+            commute_duration_to_total_minutes(
+                answers_dict.get("CommuteFromHours", ""),
+                answers_dict.get("CommuteFromMinutePart", ""),
+            )
+        )
+
+    else:
+        cleaned["CommuteToTotalMinutes"] = ""
+        cleaned["CommuteFromTotalMinutes"] = ""
 
     return cleaned
 

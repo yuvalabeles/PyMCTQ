@@ -340,6 +340,25 @@ def normalize_choice(value):
     return clean_text(value)
 
 
+def is_stimulant_non_use_selection(item, amount):
+    """Return True when the selected option means no use/consumption."""
+    amount = normalize_choice(amount)
+
+    if amount == "":
+        return False
+
+    non_use_options = {
+        normalize_choice(item.get("none_option", "")),
+    }
+
+    amount_options = item.get("amount_options", [])
+    if amount_options:
+        non_use_options.add(normalize_choice(amount_options[0]))
+
+    non_use_options.discard("")
+    return amount in non_use_options
+
+
 def build_full_name(first_name, last_name):
     # Combine first and last name into one full name
     first_name = clean_text(first_name)
@@ -885,16 +904,19 @@ def validate_mctq_answers(answers_dict):
             )
             continue
 
-        if amount != item["none_option"]:
-            period = normalize_choice(
-                answers_dict.get(period_key, "")
-            )
+        # Day/Week/Month is required only for actual consumption.
+        if is_stimulant_non_use_selection(item, amount):
+            continue
 
-            if period not in STIMULANT_PERIOD_OPTIONS:
-                errors.append(
-                    f"{item['display_name']}: "
-                    "Please select Day, Week, or Month."
-                )
+        period = normalize_choice(
+            answers_dict.get(period_key, "")
+        )
+
+        if period not in STIMULANT_PERIOD_OPTIONS:
+            errors.append(
+                f"{item['display_name']}: "
+                "Please select Day, Week, or Month."
+            )
 
     return errors
 
@@ -1039,7 +1061,7 @@ def prepare_answers_for_saving(answers_dict):
 
         cleaned[amount_key] = amount
 
-        if amount == item["none_option"]:
+        if is_stimulant_non_use_selection(item, amount):
             cleaned[period_key] = ""
         else:
             cleaned[period_key] = normalize_choice(

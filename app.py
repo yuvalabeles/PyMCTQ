@@ -347,11 +347,12 @@ with st.form("mctq_form"):
                     unsafe_allow_html=True,)
 
     with radio_col:
-        answr = st.radio(
+        answers_dict["gender"] = st.radio(
             "Gender:",
             options=VALID_GENDERS,
             index=None,
             horizontal=True,
+            key="gender",
             label_visibility="collapsed",
         )
 
@@ -380,7 +381,7 @@ with st.form("mctq_form"):
             key = question["abbr"] + suffix
 
             if question["abbr"] == "SE":
-                answers_dict[key] = show_time_question(question, key, t="08:00")
+                answers_dict[key] = show_time_question(question, key, t="08:10")
             elif question["abbr"] == "SPrep":
                 answers_dict[key] = show_time_question(question, key, t="23:30")
             else:

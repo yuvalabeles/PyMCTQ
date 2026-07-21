@@ -84,7 +84,7 @@ STIMULANT_ITEMS = [
         "unit": "**cigarettes**",
         "none_option": "I don't smoke",
         "amount_options": (
-            ["I don't smoke"]
+            ["0 (I don't smoke)"]
             + [str(amount) for amount in range(1, 21)]
             + ["More than 20"]
         ),
@@ -96,7 +96,7 @@ STIMULANT_ITEMS = [
         "unit": "bottles of **beer**",
         "none_option": "I don't drink beer",
         "amount_options": (
-            ["I don't drink beer"]
+            ["0 (I don't drink beer)"]
             + [str(amount) for amount in range(1, 11)]
             + ["More than 10"]
         ),
@@ -108,7 +108,7 @@ STIMULANT_ITEMS = [
         "unit": "glasses of **wine**",
         "none_option": "I don't drink wine",
         "amount_options": (
-            ["I don't drink wine"]
+            ["0 (I don't drink wine)"]
             + [str(amount) for amount in range(1, 11)]
             + ["More than 10"]
         ),
@@ -120,7 +120,7 @@ STIMULANT_ITEMS = [
         "unit": "glasses of **liquor** (not beer/wine)",
         "none_option": "I don't drink liquor",
         "amount_options": (
-            ["I don't drink liquor"]
+            ["0 (I don't drink liquor)"]
             + [str(amount) for amount in range(1, 11)]
             + ["More than 10"]
         ),
@@ -132,7 +132,7 @@ STIMULANT_ITEMS = [
         "unit": "cups of **coffee**",
         "none_option": "I don't drink coffee",
         "amount_options": (
-            ["I don't drink coffee"]
+            ["0 (I don't drink coffee)"]
             + [str(amount) for amount in range(1, 11)]
             + ["More than 10"]
         ),
@@ -144,7 +144,7 @@ STIMULANT_ITEMS = [
         "unit": "cups of **black tea**",
         "none_option": "I don't drink black tea",
         "amount_options": (
-            ["I don't drink black tea"]
+            ["0 (I don't drink black tea)"]
             + [str(amount) for amount in range(1, 11)]
             + ["More than 10"]
         ),
@@ -156,7 +156,7 @@ STIMULANT_ITEMS = [
         "unit": "cans of **caffeinated drinks**",
         "none_option": "I don't drink caffeinated drinks",
         "amount_options": (
-            ["I don't drink caffeinated drinks"]
+            ["0 (I don't drink caffeinated drinks)"]
             + [str(amount) for amount in range(1, 11)]
             + ["More than 10"]
         ),
@@ -168,7 +168,7 @@ STIMULANT_ITEMS = [
         "unit": "times",
         "none_option": "I don't take sleep medication",
         "amount_options": (
-            ["I don't take sleep medication"]
+            ["0 (I don't take sleep medication)"]
             + [str(amount) for amount in range(1, 11)]
         ),
     },

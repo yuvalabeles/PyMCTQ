@@ -281,20 +281,16 @@ st.markdown(
     #### Participation and use of information
 
     This questionnaire is part of a research project on chronotype and sleep-wake patterns conducted by 
-    [laboratory / principal investigator] at the Weizmann Institute of Science.
-
+    Gad Asher lab at the Weizmann Institute of Science.
     Participation is voluntary. The information you provide, including identifying and contact information, 
     will be securely stored and used only for the research purposes described here. 
     Access to the information will be restricted to authorized members of the research team.
 
     Results may be presented in scientific publications, presentations, or reports only in aggregate or de-identified form, 
     without your name, contact details, or other information reasonably expected to identify you.
-
-    The information will be retained for [retention period] and may be accessed by [authorized recipients]. 
+    The information will be retained for and may be accessed for research purposes only. 
     You are not legally required to provide this information. 
 
-    For questions or requests concerning your personal information, please contact [name and institutional email]. 
-    [Link to the full participant information and privacy notice.]
     """
 )
 

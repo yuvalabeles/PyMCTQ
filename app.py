@@ -57,17 +57,18 @@ def get_question_image_path(question_abbr):
 
 def show_question_note():
     # Show note between bedtime and sleep preparation questions
-    image_col, note_text_col, empty_col = st.columns([1.5, 7, 0.5])
+    image_col, note_text_col, empty_col = st.columns([2, 6.5, 0.5])
 
     with image_col:
         st.image(
             "images/Note.png",
-            width=80,
+            width="stretch",
+            output_format="PNG",
         )
 
     with note_text_col:
         st.markdown(
-            "**Note that some people stay awake for some time when in bed!**"
+            "**Note that some people stay awake for some time in bed!**"
         )
 
     with empty_col:
@@ -78,12 +79,13 @@ def show_question_note():
 
 def show_time_question(time_question, key_, t="23:00"):
     # Show image, question, and answer field in one row
-    image_col, question_col, input_col = st.columns([1.5, 5, 2.8])
+    image_col, question_col, input_col = st.columns([2, 4.4, 2.9])
 
     with image_col:
         st.image(
             get_question_image_path(time_question["abbr"]),
-            width=80,
+            width="stretch",
+            output_format="PNG",
         )
 
     with question_col:

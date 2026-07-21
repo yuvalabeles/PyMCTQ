@@ -219,12 +219,12 @@ def show_stimulant_row(itm, medication=False):
     # First row: statement, amount, and unit
     if medication:
         amount_col, unit_col = st.columns(
-            [3.6, 5],
+            [4.5, 5],
             vertical_alignment="center",
         )
     else:
         amount_col, unit_col = st.columns(
-            [3.6, 7.2],
+            [4, 6],
             vertical_alignment="center",
         )
 

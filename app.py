@@ -275,6 +275,29 @@ st.write(
     "your usual work days and work-free days."
 )
 
+# TODO - replace all info in [] below:
+st.markdown(
+    """
+    #### Participation and use of information
+
+    This questionnaire is part of a research project on chronotype and sleep-wake patterns conducted by 
+    [laboratory / principal investigator] at the Weizmann Institute of Science.
+
+    Participation is voluntary. The information you provide, including identifying and contact information, 
+    will be securely stored and used only for the research purposes described here. 
+    Access to the information will be restricted to authorized members of the research team.
+
+    Results may be presented in scientific publications, presentations, or reports only in aggregate or de-identified form, 
+    without your name, contact details, or other information reasonably expected to identify you.
+
+    The information will be retained for [retention period] and may be accessed by [authorized recipients]. 
+    You are not legally required to provide this information. 
+
+    For questions or requests concerning your personal information, please contact [name and institutional email]. 
+    [Link to the full participant information and privacy notice.]
+    """
+)
+
 st.info("For time questions, please use a 24-hour HH:MM format, for example: 23:30.")
 
 if st.session_state.submitted_successfully:
@@ -588,6 +611,27 @@ with st.form("mctq_form"):
                 divide(p=1)
 
     divide()
+
+    st.markdown("### Consent")
+
+    answers_dict["research_consent"] = st.checkbox(
+        "I have read and understood the information above. "
+        "I voluntarily agree to participate in this study and consent to "
+        "the collection, storage, and use of my questionnaire responses "
+        "for research on chronotype and sleep-wake patterns, as described above.",
+        value=False,
+        key="research_consent",
+    )
+
+    answers_dict["future_contact_consent"] = st.checkbox(
+        "(Optional) I agree that the research team may use my questionnaire "
+        "responses to assess whether I may be eligible for future studies "
+        "related to chronotype and sleep, and may contact me using the contact "
+        "details I provided. I understand that this does not oblige me to "
+        "participate in any future study.",
+        value=False,
+        key="future_contact_consent",
+    )
 
     submitted = st.form_submit_button("Submit")
 

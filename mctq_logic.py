@@ -3,6 +3,7 @@
 from datetime import date, datetime, timezone
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+CONSENT_VERSION = "2026-07-21-v1"
 VALID_GENDERS = ["Male", "Female"]
 VALID_YES_NO = ["Yes", "No"]
 
@@ -243,6 +244,12 @@ MCTQ_COLUMNS = [
     "browser_timezone",
     "submitted_at_utc",
     "submitted_at_local",
+
+    # Consent
+    "research_consent",
+    "future_contact_consent",
+    "consent_timestamp",
+    "consent_version",
 ]
 
 COLUMN_HEADERS = {
@@ -306,6 +313,11 @@ COLUMN_HEADERS = {
     "browser_timezone": "Timezone",
     "submitted_at_utc": "Submission Time - UTC",
     "submitted_at_local": "Submission Time - Local",
+
+    "research_consent": "Research Consent",
+    "future_contact_consent": "Future Contact Consent",
+    "consent_timestamp": "Consent Timestamp - UTC",
+    "consent_version": "Consent Version",
 }
 
 READABLE_HEADERS = [
@@ -918,6 +930,17 @@ def validate_mctq_answers(answers_dict):
                 "Please select Day, Week, or Month."
             )
 
+    research_consent = answers_dict.get(
+        "research_consent",
+        False,
+    )
+
+    if research_consent is not True:
+        errors.append(
+            "Consent: You must agree to participate and to the use of "
+            "your questionnaire responses before submitting."
+        )
+
     return errors
 
 
@@ -927,20 +950,53 @@ def prepare_answers_for_saving(answers_dict):
 
     cleaned.update(get_submission_metadata(answers_dict.get("browser_timezone", "")))
 
+    research_consent_given = (
+        answers_dict.get("research_consent", False) is True
+    )
+
+    future_contact_consent_given = (
+        answers_dict.get("future_contact_consent", False) is True
+    )
+
+    cleaned["research_consent"] = (
+        "Yes" if research_consent_given else "No"
+    )
+
+    cleaned["future_contact_consent"] = (
+        "Yes" if future_contact_consent_given else "No"
+    )
+
+    cleaned["consent_timestamp"] = (
+        cleaned["submitted_at_utc"]
+        if research_consent_given
+        else ""
+    )
+
+    cleaned["consent_version"] = (
+        CONSENT_VERSION
+        if research_consent_given
+        else ""
+    )
+
     cleaned["full_name"] = build_full_name(
         answers_dict.get("first_name", ""),
         answers_dict.get("last_name", ""),
     )
+
     cleaned["email"] = clean_text(answers_dict.get("email", ""))
+
     cleaned["phone_number"] = clean_text(
         answers_dict.get("phone_number", "")
     )
+
     cleaned["date_of_birth"] = build_date_of_birth(
         answers_dict.get("birth_day", ""),
         answers_dict.get("birth_month", ""),
         answers_dict.get("birth_year", ""),
     )
+
     cleaned["gender"] = normalize_choice(answers_dict.get("gender", ""))
+
     cleaned["WD"] = clean_text(answers_dict.get("WD", ""))
 
     for day_label, suffix in DAY_TYPES:

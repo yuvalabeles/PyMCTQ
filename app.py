@@ -275,7 +275,6 @@ st.write(
     "your usual work days and work-free days."
 )
 
-# TODO - replace all info in [] below:
 st.markdown(
     """
     #### Participation and use of information
